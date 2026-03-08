@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management System</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-calendar-alt"></i> Event Management System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#events">Events</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mt-4">
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-4" id="statisticsSection">
+            <div class="col-md-3">
+                <div class="card stat-card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Events</h5>
+                        <h2 id="totalEvents">0</h2>
+                        <i class="fas fa-calendar-check stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Upcoming</h5>
+                        <h2 id="upcomingEvents">0</h2>
+                        <i class="fas fa-clock stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Completed</h5>
+                        <h2 id="completedEvents">0</h2>
+                        <i class="fas fa-check-circle stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Participants</h5>
+                        <h2 id="totalParticipants">0</h2>
+                        <i class="fas fa-users stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Event Button & Search Bar -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#eventModal" onclick="resetForm()">
+                    <i class="fas fa-plus"></i> Add New Event
+                </button>
+                <button class="btn btn-secondary" onclick="loadEvents()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search events by name...">
+                    <button class="btn btn-outline-primary" onclick="searchEvents()">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="btn-group" role="group">
+                    <button class="btn btn-outline-secondary active" onclick="filterByStatus('ALL')">All</button>
+                    <button class="btn btn-outline-success" onclick="filterByStatus('UPCOMING')">Upcoming</button>
+                    <button class="btn btn-outline-primary" onclick="filterByStatus('ONGOING')">Ongoing</button>
+                    <button class="btn btn-outline-info" onclick="filterByStatus('COMPLETED')">Completed</button>
+                    <button class="btn btn-outline-danger" onclick="filterByStatus('CANCELLED')">Cancelled</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Events Table -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-list"></i> Events List</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Event Name</th>
+                                <th>Date</th>
+                                <th>Location</th>
+                                <th>Participants</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventsTableBody">
+                            <!-- Events will be loaded here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noEventsMessage" class="text-center text-muted" style="display: none;">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>No events found</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Modal (Add/Edit) -->
+    <div class="modal fade" id="eventModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalTitle">Add New Event</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="eventForm">
+                        <input type="hidden" id="eventId">
+                        
+                        <div class="mb-3">
+                            <label for="eventName" class="form-label">Event Name *</label>
+                            <input type="text" class="form-control" id="eventName" required minlength="3">
+                            <div class="invalid-feedback">Event name must be at least 3 characters</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="eventDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="eventDescription" rows="3"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="eventDate" class="form-label">Event Date *</label>
+                                <input type="date" class="form-control" id="eventDate" required>
+                                <div class="invalid-feedback">Please select a valid date</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="eventLocation" class="form-label">Location *</label>
+                                <input type="text" class="form-control" id="eventLocation" required>
+                                <div class="invalid-feedback">Location is required</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="maxParticipants" class="form-label">Max Participants *</label>
+                                <input type="number" class="form-control" id="maxParticipants" required min="1">
+                                <div class="invalid-feedback">Must be at least 1</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3" id="statusGroup" style="display: none;">
+                                <label for="eventStatus" class="form-label">Status</label>
+                                <select class="form-select" id="eventStatus">
+                                    <option value="UPCOMING">Upcoming</option>
+                                    <option value="ONGOING">Ongoing</option>
+                                    <option value="COMPLETED">Completed</option>
+                                    <option value="CANCELLED">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEvent()">
+                        <i class="fas fa-save"></i> Save Event
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Event Details Modal -->
+    <div class="modal fade" id="viewEventModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">Event Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="eventDetailsBody">
+                    <!-- Event details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="notificationToast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitle">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                Message here
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>
